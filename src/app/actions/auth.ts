@@ -165,7 +165,7 @@ export async function login(formData: FormData) {
     return { error: "Invalid credentials" };
   }
 
-  const session = await encrypt({ id: user.id, email: user.email, name: user.name });
+  const session = await encrypt({ id: user.id, email: user.email, name: user.name, role: user.role });
   
   const cookieStore = await cookies();
   cookieStore.set("session", session, {
