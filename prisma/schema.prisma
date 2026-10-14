@@ -1,0 +1,179 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String   @unique
+  password  String?
+  googleId  String?  @unique
+  avatar    String?
+  devices   Device[]
+  autoReplies AutoReply[]
+  contacts  Contact[]
+  messages  MessageHistory[]
+  reminders Reminder[]
+  aiConfig  AiConfig?
+  aiContext AiContext[]
+  interactiveMenus InteractiveMenu[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Device {
+  id        String   @id @default(uuid())
+  name      String
+  sessionId String   @unique
+  status    String   @default("DISCONNECTED") // DISCONNECTED, CONNECTING, CONNECTED
+  number    String?  
+  messageCount Int   @default(0)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  autoReplies AutoReply[]
+  messages  MessageHistory[]
+  reminders Reminder[]
+  interactiveMenus InteractiveMenu[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AutoReply {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  keyword   String?  // Bisa null jika type-nya ALL_MESSAGES
+  type      String   @default("EXACT") // "EXACT", "CONTAINS", "ALL_MESSAGES"
+  reply     String
+  isActive  Boolean  @default(true)
+  
+  // Waktu operasional opsional (format HH:mm, contoh: "22:00")
+  startTime String?
+  endTime   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name      String
+  number    String   // Nomor telepon (e.g. 628...)
+  label     String?  // Kategori/Grup (misal: "VIP", "Pelanggan")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MessageHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  
+  target    String   // Nomor / ID Grup
+  message   String
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  
+  title     String
+  target    String
+  message   String
+  schedule  DateTime 
+  repeat    String   @default("none") // none, daily, weekly, monthly
+  status    String   @default("WAITING") // WAITING, SENT, FAILED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model AiConfig {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  apiKeys   String[]
+  model     String   @default("llama-3.1-8b-instant")
+  prompt    String   @default("Kamu adalah asisten virtual yang ramah dan membantu.")
+  isActive  Boolean  @default(false)
+  activeDeviceIds String[] @default([])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AiContext {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  target    String   // Nomor WhatsApp / Group ID
+  role      String   // "user" or "assistant"
+  content   String
+  
+  createdAt DateTime @default(now())
+}
+
+model InteractiveMenu {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String?
+  device    Device?  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  
+  keyword   String   // Keyword yang mentrigger menu ini
+  name      String   // Nama menu (internal)
+  message   String   // Pesan pembuka (e.g., 'Silakan pilih:')
+  options   Json     // Array of { key: '1', title: 'Harga', reply: 'Harga...' }
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  sessionId String   @unique // Format: deviceId_remoteJid
+  state     String   // e.g., 'MENU:menu_id'
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  type      String   @default("RESET_PASSWORD") // RESET_PASSWORD
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
+}
+
