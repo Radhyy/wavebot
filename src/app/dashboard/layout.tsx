@@ -1,5 +1,6 @@
 import { Bell, User } from "lucide-react";
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import DashboardSidebar from "./DashboardSidebar";
 
 // Pastikan mesin WA menyala setiap kali dashboard dibuka
@@ -13,6 +14,17 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  
+  let userPlan = "FREE";
+  let userRole = "USER";
+  if (session?.id) {
+    const user = await (prisma as any).user.findUnique({
+      where: { id: session.id },
+      select: { plan: true, role: true }
+    });
+    userPlan = (user as any)?.plan || "FREE";
+    userRole = (user as any)?.role || "USER";
+  }
 
   return (
     <div className="dashboard-layout">
@@ -21,6 +33,8 @@ export default async function DashboardLayout({
         userName={session?.name || "User"} 
         userEmail={session?.email || "user@wavebot.id"} 
         userAvatar={session?.avatar || null}
+        userPlan={userPlan}
+        userRole={userRole}
       />
 
       {/* Main Content Area */}

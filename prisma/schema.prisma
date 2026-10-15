@@ -15,6 +15,8 @@ model User {
   googleId  String?  @unique
   avatar    String?
   role      String   @default("USER") // USER, ADMIN
+  plan      String   @default("FREE") // FREE, PAKET_1, PAKET_2, PAKET_3
+  planExpiresAt DateTime?
   devices   Device[]
   autoReplies AutoReply[]
   contacts  Contact[]
@@ -23,6 +25,8 @@ model User {
   aiConfig  AiConfig?
   aiContext AiContext[]
   interactiveMenus InteractiveMenu[]
+  subscriptions SubscriptionTransaction[]
+  tickets   SupportTicket[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -178,3 +182,37 @@ model OtpCode {
   @@index([email, code])
 }
 
+
+
+model SubscriptionTransaction {
+  id            String   @id @default(uuid())
+  orderId       String   @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          String   // PAKET_1, PAKET_2, PAKET_3
+  amount        Int
+  status        String   @default("PENDING") // PENDING, SUCCESS, FAILED, EXPIRED
+  snapToken     String?
+  paymentType   String?
+  transactionTime DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+model SupportTicket {
+  id        String   @id @default(uuid())
+  ticketId  String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  category  String   @default("GENERAL") // GENERAL, TECHNICAL, BILLING, BUG
+  message   String
+  status    String   @default("OPEN")    // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority  String   @default("NORMAL")  // LOW, NORMAL, HIGH, URGENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

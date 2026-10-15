@@ -25,6 +25,27 @@ export async function submitMessage(data: {
     cleanNumber = "62" + cleanNumber.substring(1);
   }
 
+  // Enforce monthly message quota based on user plan
+  const [user, totalSent] = await Promise.all([
+    (prisma as any).user.findUnique({ where: { id: session.id } }),
+    prisma.messageHistory.count({ 
+      where: { 
+        userId: session.id,
+        status: "SENT"
+      } 
+    })
+  ]);
+
+  const { getPlanDetail } = await import("@/lib/plans");
+  const planInfo = getPlanDetail(user?.plan);
+
+  if (totalSent >= planInfo.messagesLimit) {
+    return {
+      success: false,
+      error: `Kuota pesan paket ${planInfo.name} Anda (${planInfo.messagesLimit.toLocaleString()} pesan) telah habis. Silakan upgrade paket Anda di menu Pricing.`
+    };
+  }
+
   // Create message history entry as PENDING
   const history = await prisma.messageHistory.create({
     data: {

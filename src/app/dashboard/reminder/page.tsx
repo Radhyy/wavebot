@@ -13,24 +13,32 @@ export default async function ReminderPage() {
     redirect("/login");
   }
 
-  const reminders = await prisma.reminder.findMany({
-    where: { userId: session.id },
-    orderBy: { schedule: "asc" }
-  });
-
-  const devices = await prisma.device.findMany({
-    where: { userId: session.id },
-    select: { id: true, name: true, number: true, status: true }
-  });
-
-  const contacts = await prisma.contact.findMany({
-    where: { userId: session.id },
-    orderBy: { name: "asc" }
-  });
+  const [reminders, devices, contacts, user] = await Promise.all([
+    prisma.reminder.findMany({
+      where: { userId: session.id },
+      orderBy: { schedule: "asc" }
+    }),
+    prisma.device.findMany({
+      where: { userId: session.id },
+      select: { id: true, name: true, number: true, status: true }
+    }),
+    prisma.contact.findMany({
+      where: { userId: session.id },
+      orderBy: { name: "asc" }
+    }),
+    (prisma as any).user.findUnique({
+      where: { id: session.id }
+    })
+  ]);
 
   return (
     <div className="dashboard-container">
-      <ReminderClient reminders={reminders} devices={devices} contacts={contacts} />
+      <ReminderClient 
+        reminders={reminders} 
+        devices={devices} 
+        contacts={contacts} 
+        userPlan={user?.plan || "FREE"}
+      />
     </div>
   );
 }

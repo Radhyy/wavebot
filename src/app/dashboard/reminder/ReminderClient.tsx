@@ -4,12 +4,35 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, CalendarDays, Power } from "lucide-react";
 import { createReminder, deleteReminder } from "@/app/actions/reminder";
 import { fetchDeviceGroups } from "@/app/actions/groups";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanDetail } from "@/lib/plans";
 
-export default function ReminderClient({ reminders, devices, contacts }: { reminders: any[], devices: any[], contacts: any[] }) {
+export default function ReminderClient({ 
+  reminders, 
+  devices, 
+  contacts,
+  userPlan = "FREE"
+}: { 
+  reminders: any[], 
+  devices: any[], 
+  contacts: any[],
+  userPlan?: string
+}) {
   const [isComposing, setIsComposing] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const planInfo = getPlanDetail(userPlan);
+
+  const handleOpenCompose = () => {
+    if (!planInfo.features.reminder) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setIsComposing(true);
+  };
 
   // Form states
   const [title, setTitle] = useState("");
@@ -240,7 +263,7 @@ export default function ReminderClient({ reminders, devices, contacts }: { remin
             Atur pengingat pesan otomatis yang akan dikirim secara berkala.
           </p>
         </div>
-        <button onClick={() => setIsComposing(true)} className="btn-primary" style={{ borderRadius: "0.5rem" }}>
+        <button onClick={handleOpenCompose} className="btn-primary" style={{ borderRadius: "0.5rem" }}>
           <Plus size={18} />
           Buat Reminder
         </button>
@@ -322,6 +345,17 @@ export default function ReminderClient({ reminders, devices, contacts }: { remin
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade untuk Fitur Reminder"
+        featureName="Pesan Terjadwal & Reminder Otomatis"
+        minPlanName="Paket 2"
+        minPlanPrice="Rp 30.000/bln"
+        currentPlan={planInfo.tagline}
+        description={`Fitur Reminder otomatis berulang hanya tersedia untuk pelanggan Paket 2 dan Paket 3. Upgrade paket Anda sekarang untuk menikmati otomasi pengingat tanpa repot.`}
+      />
     </>
   );
 }

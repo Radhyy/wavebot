@@ -24,9 +24,14 @@ export default async function AutoReplyPage() {
     orderBy: { createdAt: "desc" }
   });
 
+  // Ambil data user untuk cek plan
+  const user = await (prisma as any).user.findUnique({
+    where: { id: session.id },
+  });
+
   return (
     <div className="dashboard-container">
-      <AutoReplyClient initialData={autoReplies} devices={devices} />
+      <AutoReplyClient initialData={autoReplies} devices={devices} userPlan={user?.plan || "FREE"} />
     </div>
   );
 }

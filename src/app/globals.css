@@ -427,3 +427,14 @@ a:hover {
   animation: spin 1s linear infinite;
 }
 
+/* Sembunyikan scrollbar visual namun tetap bisa di-scroll */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+

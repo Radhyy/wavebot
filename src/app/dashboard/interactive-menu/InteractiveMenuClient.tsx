@@ -4,10 +4,29 @@ import { useState } from "react";
 import { Plus, Trash2, ListTree } from "lucide-react";
 import { createInteractiveMenu, deleteInteractiveMenu } from "@/app/actions/interactiveMenu";
 import { useRouter } from "next/navigation";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanDetail } from "@/lib/plans";
 
-export default function InteractiveMenuClient({ menus, devices }: { menus: any[], devices: any[] }) {
+export default function InteractiveMenuClient({ 
+  menus, 
+  devices,
+  userPlan = "FREE"
+}: { 
+  menus: any[], 
+  devices: any[],
+  userPlan?: string
+}) {
   const router = useRouter();
-  // Removed form logic
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const planInfo = getPlanDetail(userPlan);
+
+  const handleCreateMenuClick = () => {
+    if (!planInfo.features.interactiveMenu) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    router.push('/dashboard/interactive-menu/create');
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Hapus menu ini?")) return;
@@ -31,7 +50,7 @@ export default function InteractiveMenuClient({ menus, devices }: { menus: any[]
             Buat bot menu interaktif (Ketik angka untuk membalas).
           </p>
         </div>
-        <button className="btn-primary" onClick={() => router.push('/dashboard/interactive-menu/create')}>
+        <button className="btn-primary" onClick={handleCreateMenuClick}>
           <Plus size={18} />
           Buat Menu Baru
         </button>
@@ -79,6 +98,17 @@ export default function InteractiveMenuClient({ menus, devices }: { menus: any[]
           </div>
         )}
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade untuk Fitur Interactive Menu"
+        featureName="Menu Flow Interaktif (Pilihan Angka)"
+        minPlanName="Paket 2"
+        minPlanPrice="Rp 30.000/bln"
+        currentPlan={planInfo.tagline}
+        description={`Fitur Interactive Menu Flow hanya tersedia untuk pengguna Paket 2 dan Paket 3. Upgrade paket Anda sekarang untuk membuat percakapan interaktif otomatis dengan pelanggan.`}
+      />
     </>
   );
 }

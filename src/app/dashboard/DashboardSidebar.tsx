@@ -21,7 +21,11 @@ import {
   PanelLeft, 
   Search,
   ChevronsUpDown,
-  BookOpen
+  BookOpen,
+  ShieldCheck,
+  ReceiptText,
+  Tag,
+  Headphones
 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 
@@ -29,19 +33,31 @@ interface DashboardSidebarProps {
   userName?: string;
   userEmail?: string;
   userAvatar?: string | null;
+  userPlan?: string;
+  userRole?: string;
 }
 
 export default function DashboardSidebar({ 
   userName = "User", 
   userEmail = "user@wavebot.id",
-  userAvatar = null
+  userAvatar = null,
+  userPlan = "FREE",
+  userRole = "USER"
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const adminNav = [
+    { name: "Admin Panel", href: "/dashboard/admin", icon: ShieldCheck },
+    { name: "Monitoring Order", href: "/dashboard/admin/orders", icon: ReceiptText },
+    { name: "Manajemen Pengguna", href: "/dashboard/admin/users", icon: Users },
+    { name: "Tiket Laporan", href: "/dashboard/admin/tickets", icon: Headphones },
+    { name: "Edit Harga", href: "/dashboard/admin/pricing", icon: Tag },
+  ];
+
   const mainNav = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    ...(userRole !== "ADMIN" ? [{ name: "Overview", href: "/dashboard", icon: LayoutDashboard }] : []),
     { name: "Devices", href: "/dashboard/devices", icon: Smartphone },
     { name: "Send Message", href: "/dashboard/send", icon: Send },
     { name: "Auto Reply", href: "/dashboard/auto-reply", icon: MessageSquare },
@@ -52,6 +68,7 @@ export default function DashboardSidebar({
 
   const toolsNav = [
     { name: "Contacts", href: "/dashboard/contacts", icon: Users },
+    { name: "Customer Service", href: "/dashboard/customer-service", icon: Headphones },
     { name: "API Docs", href: "/dashboard/api-docs", icon: Code },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
@@ -252,15 +269,41 @@ export default function DashboardSidebar({
       )}
 
       {/* Navigation List */}
-      <div style={{
-        flex: 1,
-        overflowY: "auto",
-        padding: collapsed ? "0.75rem 0.5rem" : "0.75rem 0.75rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "1.25rem"
-      }}>
+      <div 
+        className="hide-scrollbar"
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          padding: collapsed ? "0.75rem 0.5rem" : "0.75rem 0.75rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.25rem"
+        }}
+      >
         
+        {/* Admin Section (Di paling atas khusus Admin) */}
+        {userRole === "ADMIN" && (
+          <div>
+            {!collapsed && (
+              <div style={{ 
+                fontSize: "0.7rem", 
+                fontWeight: 600, 
+                color: "#94a3b8", 
+                textTransform: "capitalize", 
+                letterSpacing: "0.02em", 
+                padding: "0 0.5rem 0.35rem 0.5rem" 
+              }}>
+                Administrator
+              </div>
+            )}
+            <nav style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+              {adminNav.filter(filterItem).map(renderNavItem)}
+            </nav>
+          </div>
+        )}
+
         {/* Main Section */}
         <div>
           {!collapsed && (
@@ -392,11 +435,42 @@ export default function DashboardSidebar({
                   userName.charAt(0).toUpperCase()
                 )}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {userName}
-                </span>
-                <span style={{ fontSize: "0.7rem", color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0, flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.35rem" }}>
+                  <span style={{ 
+                    fontSize: "0.82rem", 
+                    fontWeight: 600, 
+                    color: "#0f172a", 
+                    whiteSpace: "nowrap", 
+                    overflow: "hidden", 
+                    textOverflow: "ellipsis",
+                    maxWidth: "105px"
+                  }}>
+                    {userName}
+                  </span>
+                  <span style={{
+                    fontSize: "0.6rem",
+                    fontWeight: 700,
+                    padding: "0.15rem 0.45rem",
+                    borderRadius: "4px",
+                    backgroundColor: userRole === "ADMIN" ? "rgba(139, 92, 246, 0.15)" : userPlan === "FREE" ? "#f1f5f9" : "rgba(37, 99, 235, 0.12)",
+                    color: userRole === "ADMIN" ? "#7c3aed" : userPlan === "FREE" ? "#64748b" : "#2563eb",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                    letterSpacing: "0.02em"
+                  }}>
+                    {userRole === "ADMIN" ? "ADMIN" : userPlan === "FREE" ? "Free" : userPlan.replace("_", " ")}
+                  </span>
+                </div>
+                <span style={{ 
+                  fontSize: "0.7rem", 
+                  color: "#94a3b8", 
+                  whiteSpace: "nowrap", 
+                  overflow: "hidden", 
+                  textOverflow: "ellipsis",
+                  marginTop: "1px" 
+                }}>
                   {userEmail}
                 </span>
               </div>

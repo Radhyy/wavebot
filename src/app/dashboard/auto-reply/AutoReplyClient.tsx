@@ -4,11 +4,30 @@ import { useState } from "react";
 import { Plus, Trash2, Power, PowerOff } from "lucide-react";
 import AutoReplyModal from "./AutoReplyModal";
 import { toggleAutoReply, deleteAutoReply } from "@/app/actions/autoReply";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanDetail } from "@/lib/plans";
 
-export default function AutoReplyClient({ initialData, devices }: { initialData: any[], devices: any[] }) {
+export default function AutoReplyClient({ 
+  initialData, 
+  devices,
+  userPlan = "FREE"
+}: { 
+  initialData: any[], 
+  devices: any[],
+  userPlan?: string 
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleOpenAddModal = () => {
+    if (userPlan === "FREE") {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setIsModalOpen(true);
+  };
 
   const handleToggle = async (id: string, currentState: boolean) => {
     setLoadingId(id);
@@ -33,7 +52,7 @@ export default function AutoReplyClient({ initialData, devices }: { initialData:
             Atur balasan otomatis untuk pesan masuk.
           </p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary">
+        <button onClick={handleOpenAddModal} className="btn-primary">
           <Plus size={18} />
           Tambah Auto Reply
         </button>
@@ -129,6 +148,17 @@ export default function AutoReplyClient({ initialData, devices }: { initialData:
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade untuk Fitur Auto Reply"
+        featureName="Auto Reply Otomatis 24/7"
+        minPlanName="Paket 1"
+        minPlanPrice="Rp 15.000/bln"
+        currentPlan={getPlanDetail(userPlan).tagline}
+        description="Pada Free Plan, Anda hanya dapat menghubungkan device dan kirim pesan via REST API standar. Untuk menggunakan Auto Reply otomatis 24/7, silakan upgrade paket Anda mulai dari Rp 15.000/bulan."
+      />
     </>
   );
 }

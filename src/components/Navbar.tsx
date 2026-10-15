@@ -23,8 +23,8 @@ export default function Navbar({ activePage = "home" }: NavbarProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Fetch active session from API
-    fetch("/api/auth/me")
+    // Fetch active session from API without caching
+    fetch("/api/auth/me", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (data.authenticated && data.user) {

@@ -5,14 +5,33 @@ import { Search, Plus, Trash2, Upload, MessageSquare } from "lucide-react";
 import { deleteContact } from "@/app/actions/contacts";
 import AddContactModal from "./AddContactModal";
 import BroadcastModal from "./BroadcastModal";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanDetail } from "@/lib/plans";
 
-export default function ContactsClient({ initialData }: { initialData: any[] }) {
+export default function ContactsClient({ 
+  initialData, 
+  userPlan = "FREE" 
+}: { 
+  initialData: any[],
+  userPlan?: string 
+}) {
   const [contacts, setContacts] = useState(initialData);
   const [search, setSearch] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const planInfo = getPlanDetail(userPlan);
+
+  const handleOpenBroadcast = () => {
+    if (!planInfo.features.broadcast) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setIsBroadcastModalOpen(true);
+  };
 
   const filteredContacts = contacts.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -96,7 +115,7 @@ export default function ContactsClient({ initialData }: { initialData: any[] }) 
             <button 
               className="btn-primary" 
               style={{ backgroundColor: "#10b981" }} // warna hijau
-              onClick={() => setIsBroadcastModalOpen(true)}
+              onClick={handleOpenBroadcast}
             >
               <MessageSquare size={18} />
               Broadcast ({selectedContacts.length})
@@ -213,6 +232,17 @@ export default function ContactsClient({ initialData }: { initialData: any[] }) 
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade untuk Fitur Broadcast"
+        featureName="Pesan Massal / Broadcast Cepat"
+        minPlanName="Paket 2"
+        minPlanPrice="Rp 30.000/bln"
+        currentPlan={planInfo.tagline}
+        description={`Fitur kirim broadcast massal ke banyak kontak sekaligus hanya tersedia untuk Paket 2 dan Paket 3. Upgrade paket Anda sekarang untuk promosi dan pesan massal tanpa repot kirim manual.`}
+      />
     </>
   );
 }

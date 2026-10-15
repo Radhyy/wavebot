@@ -14,15 +14,24 @@ export default async function AiChatbotPage() {
     redirect("/login");
   }
 
-  const aiConfig = await getAiConfig();
-  const devices = await prisma.device.findMany({
-    where: { userId: session.id },
-    select: { id: true, name: true, number: true, status: true }
-  });
+  const [aiConfig, devices, user] = await Promise.all([
+    getAiConfig(),
+    prisma.device.findMany({
+      where: { userId: session.id },
+      select: { id: true, name: true, number: true, status: true }
+    }),
+    (prisma as any).user.findUnique({
+      where: { id: session.id }
+    })
+  ]);
 
   return (
     <div className="dashboard-container">
-      <AiChatbotClient initialConfig={aiConfig} devices={devices} />
+      <AiChatbotClient 
+        initialConfig={aiConfig} 
+        devices={devices} 
+        userPlan={user?.plan || "FREE"}
+      />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { createSession, getSessionStatus } from "@/lib/whatsapp";
 import { v4 as uuidv4 } from "uuid";
 import { revalidatePath } from "next/cache";
 
+import { getPlanDetail } from "@/lib/plans";
+
 export async function addDevice(deviceName: string) {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };

@@ -48,12 +48,17 @@ function formatTimeAgo(dateString: string) {
   }
 }
 
+import { getPlanDetail } from "@/lib/plans";
+import { Zap } from "lucide-react";
+
 export default function DashboardClient({ 
   userName, 
+  userPlan = "FREE",
   stats, 
   hourlyData = [], 
   recentActivities = [] 
 }: any) {
+  const currentPlan = getPlanDetail(userPlan);
   const cards = [
     {
       title: "Connected Devices",
@@ -98,13 +103,65 @@ export default function DashboardClient({
     <div className="dashboard-container" style={{ paddingBottom: "2rem" }}>
       
       {/* Greeting Section */}
-      <div style={{ marginBottom: "1.25rem" }}>
-        <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: "2.25rem", fontWeight: 700, color: "var(--foreground)", marginBottom: "0.5rem", letterSpacing: "-0.025em" }}>
-          Welcome back, {firstName}!
-        </h1>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "1.05rem" }}>
-          Berikut adalah ringkasan performa dan metrik Gateway WhatsApp Anda hari ini.
-        </p>
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "flex-start", 
+        marginBottom: "1.5rem",
+        flexWrap: "wrap",
+        gap: "1rem"
+      }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+            <h1 style={{ fontFamily: "var(--font-poppins)", fontSize: "2.25rem", fontWeight: 700, color: "var(--foreground)", margin: 0, letterSpacing: "-0.025em" }}>
+              Welcome back, {firstName}!
+            </h1>
+            
+            {/* Active Plan Tag */}
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.35rem 0.85rem",
+              borderRadius: "9999px",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              backgroundColor: currentPlan.id === "FREE" ? "#f1f5f9" : "rgba(37, 99, 235, 0.1)",
+              color: currentPlan.id === "FREE" ? "#475569" : "#2563eb",
+              border: currentPlan.id === "FREE" ? "1px solid #cbd5e1" : "1px solid rgba(37, 99, 235, 0.3)"
+            }}>
+              <Zap size={14} />
+              <span>{currentPlan.tagline}</span>
+            </div>
+          </div>
+          <p style={{ color: "var(--muted-foreground)", fontSize: "1.02rem", margin: 0 }}>
+            Berikut adalah ringkasan performa dan metrik Gateway WhatsApp Anda hari ini.
+          </p>
+        </div>
+
+        {/* Upgrade / Pricing Action Button */}
+        <Link 
+          href="/pricing"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            backgroundColor: currentPlan.id === "FREE" ? "#2563eb" : "#ffffff",
+            color: currentPlan.id === "FREE" ? "#ffffff" : "#0f172a",
+            border: currentPlan.id === "FREE" ? "none" : "1px solid #e2e8f0",
+            padding: "0.65rem 1.25rem",
+            borderRadius: "0.75rem",
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            textDecoration: "none",
+            boxShadow: currentPlan.id === "FREE" ? "0 4px 12px rgba(37, 99, 235, 0.25)" : "0 1px 2px rgba(0,0,0,0.05)",
+            transition: "all 0.2s ease"
+          }}
+        >
+          <Zap size={16} color={currentPlan.id === "FREE" ? "#ffffff" : "#2563eb"} />
+          {currentPlan.id === "FREE" ? "Upgrade Paket" : "Kelola / Ubah Paket"}
+          <ArrowRight size={15} />
+        </Link>
       </div>
 
       <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem" }}>

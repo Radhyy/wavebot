@@ -1,12 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Save, Plus, Trash2, Power } from "lucide-react";
+import { Bot, Save, Plus, Trash2, Power, Lock } from "lucide-react";
 import { updateAiConfig } from "@/app/actions/aiConfig";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanDetail } from "@/lib/plans";
 
-export default function AiChatbotClient({ initialConfig, devices }: { initialConfig: any, devices: any[] }) {
+export default function AiChatbotClient({ 
+  initialConfig, 
+  devices,
+  userPlan = "FREE"
+}: { 
+  initialConfig: any, 
+  devices: any[],
+  userPlan?: string 
+}) {
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const planInfo = getPlanDetail(userPlan);
+  const isAiAllowed = planInfo.features.aiChatbot;
+
   const [prompt, setPrompt] = useState(initialConfig?.prompt || "");
-  const [isActive, setIsActive] = useState(initialConfig?.isActive || false);
+  const [isActive, setIsActive] = useState(isAiAllowed ? (initialConfig?.isActive || false) : false);
   const [activeDeviceIds, setActiveDeviceIds] = useState<string[]>(initialConfig?.activeDeviceIds || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,7 +111,13 @@ export default function AiChatbotClient({ initialConfig, devices }: { initialCon
             </div>
             <button 
               type="button" 
-              onClick={() => setIsActive(!isActive)}
+              onClick={() => {
+                if (!isAiAllowed) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                setIsActive(!isActive);
+              }}
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.5rem", borderRadius: "2rem", fontWeight: 600, border: "none", cursor: "pointer", background: isActive ? "#10b981" : "#ef4444", color: "white", transition: "all 0.2s" }}
             >
               <Power size={18} />
@@ -185,6 +205,17 @@ export default function AiChatbotClient({ initialConfig, devices }: { initialCon
           </div>
         </form>
       </div>
+
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Upgrade untuk Fitur AI Chatbot"
+        featureName="AI Chatbot Pintar (Groq LLM Llama 3.1)"
+        minPlanName="Paket 3"
+        minPlanPrice="Rp 50.000/bln"
+        currentPlan={planInfo.tagline}
+        description={`Kecerdasan buatan AI Chatbot eksklusif tersedia bagi pelanggan Paket 3. AI dapat menjawab pertanyaan pelanggan secara cerdas dan kontekstual 24 jam nonstop.`}
+      />
     </>
   );
 }

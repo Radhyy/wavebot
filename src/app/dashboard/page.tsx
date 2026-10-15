@@ -10,6 +10,15 @@ export default async function DashboardOverview() {
   const userId = session.id;
 
   let user = null;
+  try {
+    user = await prisma.user.findUnique({ where: { id: userId } });
+  } catch (e) {}
+
+  // Jika akun adalah ADMIN, arahkan otomatis langsung ke Dashboard Admin
+  if (user?.role === "ADMIN" || user?.email === "raaakb87@gmail.com" || session.role === "ADMIN" || session.email === "raaakb87@gmail.com") {
+    redirect("/dashboard/admin");
+  }
+
   let devicesCount = 0;
   let messagesCount = 0;
   let autoRepliesCount = 0;
@@ -17,17 +26,15 @@ export default async function DashboardOverview() {
 
   try {
     const results = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId } }),
       prisma.device.count({ where: { userId } }),
       prisma.messageHistory.count({ where: { userId } }),
       prisma.autoReply.count({ where: { userId } }),
       prisma.interactiveMenu.count({ where: { userId } }),
     ]);
-    user = results[0];
-    devicesCount = results[1];
-    messagesCount = results[2];
-    autoRepliesCount = results[3];
-    menusCount = results[4];
+    devicesCount = results[0];
+    messagesCount = results[1];
+    autoRepliesCount = results[2];
+    menusCount = results[3];
   } catch (error) {
     console.error("Dashboard DB fetch error (possible cold start):", error);
     try {
@@ -125,6 +132,7 @@ export default async function DashboardOverview() {
   return (
     <DashboardClient 
       userName={user?.name || 'User'} 
+      userPlan={(user as any)?.plan || 'FREE'}
       stats={stats} 
       hourlyData={hourlyData} 
       recentActivities={recentActivities} 

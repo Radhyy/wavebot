@@ -56,6 +56,7 @@ const gridFeatures = [
 
 const pricingPlans = [
   {
+    id: "FREE",
     name: "Free Trial",
     price: "Rp 0",
     period: "/selamanya",
@@ -77,6 +78,7 @@ const pricingPlans = [
     ]
   },
   {
+    id: "PAKET_1",
     name: "Paket 1",
     price: "Rp 15.000",
     period: "/bulan",
@@ -98,6 +100,7 @@ const pricingPlans = [
     ]
   },
   {
+    id: "PAKET_2",
     name: "Paket 2",
     price: "Rp 30.000",
     period: "/bulan",
@@ -119,6 +122,7 @@ const pricingPlans = [
     ]
   },
   {
+    id: "PAKET_3",
     name: "Paket 3",
     price: "Rp 50.000",
     period: "/bulan",
@@ -142,6 +146,28 @@ const pricingPlans = [
 ];
 
 export default function LandingPage() {
+  const [dynamicPrices, setDynamicPrices] = useState<Record<string, string>>({
+    FREE: "Rp 0",
+    PAKET_1: "Rp 15.000",
+    PAKET_2: "Rp 30.000",
+    PAKET_3: "Rp 50.000",
+  });
+
+  useEffect(() => {
+    fetch("/api/pricing", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.plans) {
+          setDynamicPrices({
+            FREE: data.plans.FREE.priceDisplay,
+            PAKET_1: data.plans.PAKET_1.priceDisplay,
+            PAKET_2: data.plans.PAKET_2.priceDisplay,
+            PAKET_3: data.plans.PAKET_3.priceDisplay,
+          });
+        }
+      })
+      .catch((err) => console.error("Error fetching pricing:", err));
+  }, []);
 
   return (
     <div style={{ minHeight: "100vh", fontFamily: "var(--font-inter)", backgroundColor: "#ffffff", overflowX: "clip" }}>
@@ -899,7 +925,7 @@ export default function LandingPage() {
                 <div style={{ marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid #f1f5f9" }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "0.25rem" }}>
                     <span style={{ fontSize: "2.25rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em" }}>
-                      {plan.price}
+                      {dynamicPrices[plan.id] || plan.price}
                     </span>
                     <span style={{ fontSize: "0.9rem", color: "#64748b", fontWeight: 500 }}>
                       {plan.period}
