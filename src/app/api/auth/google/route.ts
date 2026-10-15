@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const host = req.headers.get("host") || "localhost:3000";
-  const protocol = req.nextUrl.protocol || "http:";
-  const origin = `${protocol}//${host}`;
+  
+  // Ambil origin dari NEXT_PUBLIC_APP_URL jika ada, atau headers reverse-proxy
+  let origin = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+  if (!origin) {
+    const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
+    origin = `${forwardedProto}://${host}`;
+  }
+  // Hilangkan trailing slash jika ada
+  origin = origin.replace(/\/$/, "");
   const redirectUri = `${origin}/api/auth/callback/google`;
 
   if (!clientId) {

@@ -25,9 +25,14 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const code = searchParams.get("code");
   const error = searchParams.get("error");
-  const host = req.headers.get("host") || "localhost:3000";
-  const protocol = req.nextUrl.protocol || "http:";
-  const origin = `${protocol}//${host}`;
+  
+  let origin = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+  if (!origin) {
+    const forwardedProto = req.headers.get("x-forwarded-proto") || "https";
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
+    origin = `${forwardedProto}://${host}`;
+  }
+  origin = origin.replace(/\/$/, "");
 
   if (error || !code) {
     console.error("Google Auth error or cancelled:", error);
